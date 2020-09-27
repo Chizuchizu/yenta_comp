@@ -167,7 +167,6 @@ for i, (x, func) in enumerate(data_dict.items()):
     # if i != debug:
     #     continue
     output = func(pd.read_csv(f"../data/{x}.csv"))
-    # print(output.info())
     data = pd.merge(data, output, on="user_id", how="left")
     print("\n---------------------------------------------")
 
