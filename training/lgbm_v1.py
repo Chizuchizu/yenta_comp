@@ -3,7 +3,6 @@ from sklearn.model_selection import KFold
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy import stats
 import pickle
 
 
@@ -46,15 +45,19 @@ for fold, (train_idx, valid_idx) in enumerate(kfold.split(train, target)):
         verbose_eval=100,
         early_stopping_rounds=100
     )
+
+    y_pred = estimator.predict(test)
+    pred += y_pred / N_FOLDS
+
     pickle.dump(estimator, open(f"../models/lgbm_v1_{fold}.pkl", "wb"))
     print(fold + 1, "done")
-
-    # pred[:, fold] += estimator.predict(test)
 
     lgb.plot_importance(estimator, importance_type="gain", max_num_features=25)
     plt.show()
 
-
+ss = pd.read_csv("../data/test.csv")
+ss["score"] = np.argmax(pred, axis=1).astype(float)
+# ss.to_csv("../outputs/lgbm_v1_1.csv", index=False)
 # pd.DataFrame(pred).to_csv("predict_1111.csv", index=False)
 # pred = stats.mode(pred, axis=1)[0].flatten().astype(int)
 

@@ -70,22 +70,25 @@ def reduce_mem_usage(df):
     return df
 
 
+def pivot(df, column):
+    df["values"] = 1
+    df.loc[df[column] == 999999] = np.nan
+    df = df.pivot_table(index="user_id", columns=column, values="values", fill_value=0).astype("bool")
+    df.index = df.index.astype(int)
+    df.columns = df.columns.astype(int)
+    return df
+
+
 @stop_watch
 def educations(new_df):
     new_df = new_df.drop(columns="degree_id")
-    # new_df["id"] = new_df.index.copy()
-    new_df["values"] = 1
-    new_df.loc[new_df["school_id"] == 999999] = np.nan
-    new_df = new_df.pivot_table(index="user_id", columns="school_id", values="values", fill_value=0).astype("bool")
-    new_df.index = new_df.index.astype(int)
-    new_df.columns = new_df.columns.astype(int)
+    new_df = pivot(new_df, "educations")
 
     pca = PCA(n_components=50)
     pca_data = pd.DataFrame(pca.fit_transform(new_df), columns=[f"educations_{j}" for j in range(50)])
     new_df = pd.DataFrame(new_df.index)
     new_df = pd.concat([new_df, pca_data], axis=1)
 
-    # print(new_df.info(memory_usage="deep"))
     # 49.2MB
     return new_df
 
@@ -93,11 +96,7 @@ def educations(new_df):
 @stop_watch
 def works(new_df):
     new_df = new_df.drop(columns=["over_1000_employees", "industry_id"])
-    new_df["values"] = 1
-    new_df.loc[new_df["company_id"] == 999999] = np.nan
-    new_df = new_df.pivot_table(index="user_id", columns="company_id", values="values", fill_value=0).astype("bool")
-    new_df.index = new_df.index.astype(int)
-    new_df.columns = new_df.columns.astype(int)
+    new_df = pivot(new_df, "works")
 
     pca = PCA(n_components=100)
     pca_data = pd.DataFrame(pca.fit_transform(new_df), columns=[f"works_{j}" for j in range(100)])
@@ -112,10 +111,7 @@ def works(new_df):
 @stop_watch
 def skills(new_df):
     new_df["values"] = 1
-    new_df.loc[new_df["skill_id"] == 999999] = np.nan
-    new_df = new_df.pivot_table(index="user_id", columns="skill_id", values="values", fill_value=0).astype("bool")
-    new_df.index = new_df.index.astype(int)
-    new_df.columns = new_df.columns.astype(int)
+    new_df = pivot(new_df, "skills")
 
     pca = PCA(n_components=100)
     pca_data = pd.DataFrame(pca.fit_transform(new_df), columns=[f"skills_{j}" for j in range(100)])
@@ -125,12 +121,10 @@ def skills(new_df):
     return new_df
 
 
-def strengths(new_df):
-    return new_df
+def strengths(new_df): return new_df
 
 
-def purposes(new_df):
-    return new_df
+def purposes(new_df): return new_df
 
 
 @stop_watch
@@ -147,6 +141,7 @@ def sessions(new_df):
 
 
 def intro(new_df):
+    """nanのある行の削除(PCAに渡せないので)"""
     new_df = new_df.drop(new_df.index[new_df.iloc[:, 4:].isnull().sum(axis=1) != 0]).reset_index()
     pca = PCA(n_components=50)
     pca_data = pca.fit_transform(new_df.iloc[:, 4:])
@@ -172,10 +167,9 @@ for i, (x, func) in enumerate(data_dict.items()):
     # if i != debug:
     #     continue
     output = func(pd.read_csv(f"../data/{x}.csv"))
-    print()
     # print(output.info())
     data = pd.merge(data, output, on="user_id", how="left")
-    print("---------------------------------------------")
+    print("\n---------------------------------------------")
 
 print(data.info())
 # data = reduce_mem_usage(data)

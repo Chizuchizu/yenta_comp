@@ -3,7 +3,6 @@ from sklearn.model_selection import KFold
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from scipy import stats
 import pickle
 
 
@@ -44,4 +43,5 @@ for fold, (train_idx, valid_idx) in enumerate(kfold.split(train, target)):
 
 ss = pd.read_csv("../data/test.csv")
 ss["score"] = np.argmax(pred, axis=1).astype(float)
+ss.to_csv("../outputs/lgbm_v1_1.csv", index=False)
 print()
