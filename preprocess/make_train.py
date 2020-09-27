@@ -11,11 +11,11 @@ train = train.drop(columns=["score", "from-to"])
 
 data["from"] = data["user_id"].copy()
 data = data.drop(columns="user_id")
-train = pd.merge(train, data, on="from")
+train = pd.merge(train, data, on="from", how="left")
 data["to"] = data["from"].copy()
 
 data = data.drop(columns="from")
-train = pd.merge(train, data, on="to")
+train = pd.merge(train, data, on="to", how="left")
 
 train = train.drop(columns=["from", "to"])
 
