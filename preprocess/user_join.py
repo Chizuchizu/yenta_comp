@@ -1,5 +1,6 @@
 from functools import wraps
 import time
+from sklearn.decomposition import PCA
 
 import pandas as pd
 import numpy as np
@@ -78,6 +79,12 @@ def educations(new_df):
     new_df = new_df.pivot_table(index="user_id", columns="school_id", values="values", fill_value=0).astype("bool")
     new_df.index = new_df.index.astype(int)
     new_df.columns = new_df.columns.astype(int)
+
+    pca = PCA(n_components=100)
+    pca_data = pd.DataFrame(pca.fit_transform(new_df))
+    new_df = pd.DataFrame(new_df.index)
+    new_df = pd.concat([new_df, pca_data], axis=1)
+
     # print(new_df.info(memory_usage="deep"))
     # 49.2MB
     return new_df
@@ -91,6 +98,12 @@ def works(new_df):
     new_df = new_df.pivot_table(index="user_id", columns="company_id", values="values", fill_value=0).astype("bool")
     new_df.index = new_df.index.astype(int)
     new_df.columns = new_df.columns.astype(int)
+
+    pca = PCA(n_components=100)
+    pca_data = pd.DataFrame(pca.fit_transform(new_df))
+    new_df = pd.DataFrame(new_df.index)
+    new_df = pd.concat([new_df, pca_data], axis=1)
+
     # 75.9MB
     print("hello")
     return new_df
@@ -103,6 +116,11 @@ def skills(new_df):
     new_df = new_df.pivot_table(index="user_id", columns="skill_id", values="values", fill_value=0).astype("bool")
     new_df.index = new_df.index.astype(int)
     new_df.columns = new_df.columns.astype(int)
+
+    pca = PCA(n_components=100)
+    pca_data = pd.DataFrame(pca.fit_transform(new_df))
+    new_df = pd.DataFrame(new_df.index)
+    new_df = pd.concat([new_df, pca_data], axis=1)
 
     return new_df
 
@@ -141,7 +159,7 @@ data_dict = {
     "user_sessions": sessions,
     "user_self_intro_vectors_300dims": intro
 }
-debug = 100
+debug = 2
 for i, (x, func) in enumerate(data_dict.items()):
     print(x)
     # if i != debug:
@@ -154,4 +172,4 @@ for i, (x, func) in enumerate(data_dict.items()):
 
 print(data.info())
 # data = reduce_mem_usage(data)
-data.to_pickle("../data/user_agg_v1.pkl")
+data.to_pickle("../data/user_agg_v2.pkl")
