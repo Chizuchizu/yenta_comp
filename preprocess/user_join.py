@@ -147,6 +147,13 @@ def sessions(new_df):
 
 
 def intro(new_df):
+    new_df = new_df.drop(new_df.index[new_df.iloc[:, 4:].isnull().sum(axis=1) != 0]).reset_index()
+    pca = PCA(n_components=100)
+    pca_data = pca.fit_transform(new_df.iloc[:, 4:])
+    pca_data = pd.DataFrame(pca_data)
+    new_df = new_df.iloc[:, :4].copy()
+    new_df = pd.concat([new_df, pca_data], axis=1)
+
     return new_df
 
 
@@ -159,11 +166,11 @@ data_dict = {
     "user_sessions": sessions,
     "user_self_intro_vectors_300dims": intro
 }
-debug = 2
+debug = 6
 for i, (x, func) in enumerate(data_dict.items()):
     print(x)
-    # if i != debug:
-    #     continue
+    if i != debug:
+        continue
     output = func(pd.read_csv(f"../data/{x}.csv"))
     print()
     print(output.info())
@@ -172,4 +179,4 @@ for i, (x, func) in enumerate(data_dict.items()):
 
 print(data.info())
 # data = reduce_mem_usage(data)
-data.to_pickle("../data/user_agg_v2.pkl")
+data.to_pickle("../data/user_agg_v3.pkl")
