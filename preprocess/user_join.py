@@ -80,8 +80,8 @@ def educations(new_df):
     new_df.index = new_df.index.astype(int)
     new_df.columns = new_df.columns.astype(int)
 
-    pca = PCA(n_components=100)
-    pca_data = pd.DataFrame(pca.fit_transform(new_df))
+    pca = PCA(n_components=50)
+    pca_data = pd.DataFrame(pca.fit_transform(new_df), columns=[f"educations_{j}" for j in range(50)])
     new_df = pd.DataFrame(new_df.index)
     new_df = pd.concat([new_df, pca_data], axis=1)
 
@@ -100,7 +100,7 @@ def works(new_df):
     new_df.columns = new_df.columns.astype(int)
 
     pca = PCA(n_components=100)
-    pca_data = pd.DataFrame(pca.fit_transform(new_df))
+    pca_data = pd.DataFrame(pca.fit_transform(new_df), columns=[f"works_{j}" for j in range(100)])
     new_df = pd.DataFrame(new_df.index)
     new_df = pd.concat([new_df, pca_data], axis=1)
 
@@ -118,7 +118,7 @@ def skills(new_df):
     new_df.columns = new_df.columns.astype(int)
 
     pca = PCA(n_components=100)
-    pca_data = pd.DataFrame(pca.fit_transform(new_df))
+    pca_data = pd.DataFrame(pca.fit_transform(new_df), columns=[f"skills_{j}" for j in range(100)])
     new_df = pd.DataFrame(new_df.index)
     new_df = pd.concat([new_df, pca_data], axis=1)
 
@@ -148,9 +148,9 @@ def sessions(new_df):
 
 def intro(new_df):
     new_df = new_df.drop(new_df.index[new_df.iloc[:, 4:].isnull().sum(axis=1) != 0]).reset_index()
-    pca = PCA(n_components=100)
+    pca = PCA(n_components=50)
     pca_data = pca.fit_transform(new_df.iloc[:, 4:])
-    pca_data = pd.DataFrame(pca_data)
+    pca_data = pd.DataFrame(pca_data, columns=[f"intro_{j}" for j in range(50)])
     new_df = new_df.iloc[:, :4].copy()
     new_df = pd.concat([new_df, pca_data], axis=1)
 
@@ -169,11 +169,11 @@ data_dict = {
 debug = 6
 for i, (x, func) in enumerate(data_dict.items()):
     print(x)
-    if i != debug:
-        continue
+    # if i != debug:
+    #     continue
     output = func(pd.read_csv(f"../data/{x}.csv"))
     print()
-    print(output.info())
+    # print(output.info())
     data = pd.merge(data, output, on="user_id", how="left")
     print("---------------------------------------------")
 
