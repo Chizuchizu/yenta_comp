@@ -7,12 +7,16 @@ import gc
 
 
 N_FOLDS = 4
-VERSION = 2
+VERSION = 4
+DEBUG = True
+NUM_CLASSES = 4
+SEED = 22
+num_rounds = 10 if DEBUG else 1000
 
 params = {
     'objective': 'multiclass',
     'metric': 'multi_logloss',
-    'num_class': 4,
+    'num_class': NUM_CLASSES,
     'learning_rate': 0.15,
     'max_depth': 7,
     'num_leaves': 31,
@@ -22,15 +26,15 @@ params = {
     'nthread': -1,
     'bagging_freq': 1,
     'verbose': -1,
-    'seed': 1,
+    'seed': SEED,
 }
 
 train = pd.read_pickle(f"../data/train_v{VERSION}.pkl")
 test = pd.read_pickle(f"../data/test_v{VERSION}.pkl")
 target = train["score"]
 train = train.drop(columns="score")
-kfold = KFold(n_splits=N_FOLDS, shuffle=True, random_state=24)
-pred = np.zeros((test.shape[0], N_FOLDS))
+kfold = KFold(n_splits=N_FOLDS, shuffle=True, random_state=SEED)
+pred = np.zeros((test.shape[0], NUM_CLASSES))
 score = 0
 for fold, (train_idx, valid_idx) in enumerate(kfold.split(train, target)):
     x_train, x_valid = train.loc[train_idx], train.loc[valid_idx]
@@ -47,7 +51,7 @@ for fold, (train_idx, valid_idx) in enumerate(kfold.split(train, target)):
     estimator = lgb.train(
         params=params,
         train_set=d_train,
-        num_boost_round=1000,
+        num_boost_round=num_rounds,
         valid_sets=[d_train, d_valid],
         verbose_eval=100,
         early_stopping_rounds=100
@@ -62,6 +66,7 @@ for fold, (train_idx, valid_idx) in enumerate(kfold.split(train, target)):
     lgb.plot_importance(estimator, importance_type="gain", max_num_features=25)
     plt.show()
 
-ss = pd.read_csv("../data/test.csv")
-ss["score"] = np.argmax(pred, axis=1).astype(float)
-ss.to_csv(f"../outputs/lgbm_v{VERSION}_{round(score, 4)}.csv", index=False)
+if not DEBUG:
+    ss = pd.read_csv("../data/test.csv")
+    ss["score"] = np.argmax(pred, axis=1).astype(float)
+    ss.to_csv(f"../outputs/lgbm_v{VERSION}_{round(score, 4)}.csv", index=False)
