@@ -7,22 +7,22 @@ import gc
 
 
 N_FOLDS = 4
-VERSION = 4
+VERSION = 5
 DEBUG = False
 NUM_CLASSES = 4
 SEED = 22
-num_rounds = 10 if DEBUG else 1000
+num_rounds = 10 if DEBUG else 1200
 
 params = {
     'objective': 'multiclass',
     'metric': 'multi_logloss',
     'num_class': NUM_CLASSES,
-    'learning_rate': 0.15,
-    'max_depth': 7,
-    'num_leaves': 31,
+    'learning_rate': 0.17,
+    'max_depth': 6,
+    'num_leaves': 24,
     'max_bin': 31,
-    'colsample_bytree': 0.8,
-    'subsample': 0.8,
+    'colsample_bytree': 0.9,
+    'subsample': 0.9,
     'nthread': -1,
     'bagging_freq': 1,
     'verbose': -1,
