@@ -1,14 +1,23 @@
 import pandas as pd
 
-VERSION = 4
+USER_V = 4
+INTERACTION_V = 2
+VERSION = 5
 
 df = pd.read_csv("../data/train.csv")
 
-# target = train["score"]
+
+def feature_engineering(df_):
+    diff_list = ["1_from_count_x_", "age_", "num_char_", "range_"]
+    for diff in diff_list:
+        df_[f"{diff}diff"] = df_[f"{diff}x"] - df_[f"{diff}y"]
+
+    return df_
+
 
 for mode in ["train", "test"]:
-    data = pd.read_pickle(f"../data/user_agg_v{VERSION}.pkl")
-    data_1 = pd.read_pickle("../data/data_1_v1.pkl")
+    data = pd.read_pickle(f"../data/user_agg_v{USER_V}.pkl")
+    data_1 = pd.read_pickle(f"../data/data_1_v{INTERACTION_V}.pkl")
     data.index = data["user_id"]
 
     df = pd.read_csv(f"../data/{mode}.csv")
@@ -19,6 +28,7 @@ for mode in ["train", "test"]:
     df = df.drop(columns=["from-to"])
 
     # userのdataを結合
+    """-------------------------"""
     data["from"] = data["user_id"].copy()
     data = data.drop(columns="user_id")
     df = pd.merge(df, data, on="from", how="left")
@@ -34,6 +44,9 @@ for mode in ["train", "test"]:
     df = pd.merge(df, data_1, on="to", how="left")
 
     df = df.drop(columns=["from", "to"])
+    """-------------------------"""
+
+    df = feature_engineering(df)
 
     print(df.info())
 

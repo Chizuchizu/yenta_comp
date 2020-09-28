@@ -8,7 +8,7 @@ import gc
 
 N_FOLDS = 4
 VERSION = 4
-DEBUG = True
+DEBUG = False
 NUM_CLASSES = 4
 SEED = 22
 num_rounds = 10 if DEBUG else 1000

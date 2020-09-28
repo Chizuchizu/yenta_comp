@@ -17,8 +17,12 @@ def from_to(df):
 
 def swipes(data, swipe):
     swipe.loc[swipe["swipe_status"] == -1] = 0
+    swipe["timestamp"] = pd.to_datetime(swipe["timestamp"])
     # df = pd.DataFrame(swipe["from"].unique())
     df_list = list()
+
+    day_max = swipe["timestamp"].max()
+
     for mode in ["from", "to"]:
         print(mode)
         memo = swipe.groupby(mode)["swipe_status"]
@@ -26,7 +30,19 @@ def swipes(data, swipe):
         df[f"1_{mode}_count"] = memo.count().values
         df[f"1_{mode}_1_sum"] = memo.sum().values
         df[f"1_{mode}_0_sum"] = df[f"1_{mode}_count"] - df[f"1_{mode}_1_sum"]
-        df[f"1_{mode}_1_ratio"] = df[f"1_{mode}_0_sum"] / df[f"1_{mode}_count"]
+        df[f"1_{mode}_1_ratio"] = df[f"1_{mode}_1_sum"] / df[f"1_{mode}_count"]
+
+        # timestamp
+        memo = swipe.groupby(mode)["timestamp"]
+        df[f"1_{mode}_range"] = (memo.max() - memo.min()).dt.days.reset_index()["timestamp"]
+        df[f"1_{mode}_max_diff"] = (day_max - memo.max()).dt.days.reset_index()["timestamp"]
+        df[f"1_{mode}_per_day"] = df[f"1_{mode}_count"] / df[f"1_{mode}_range"]
+
+        """
+        最後に日付が重複している日
+        →　ユーザーの閲覧時間の平均を取る
+        """
+
         df_list.append(df)
 
     data = data.merge(df_list[0], on="user_id", how="left")
@@ -43,4 +59,4 @@ def swipes(data, swipe):
 data1 = swipes(base_data, data1)
 print()
 
-data1.to_pickle("../data/data_1_v1.pkl")
+data1.to_pickle("../data/data_1_v2.pkl")
