@@ -71,12 +71,14 @@ def reduce_mem_usage(df):
 
 
 def pivot(df, column):
-    df["values"] = 1
-    df.loc[df[column] == 999999] = np.nan
-    df = df.pivot_table(index="user_id", columns=column, values="values", fill_value=0).astype("bool")
-    df.index = df.index.astype(int)
-    df.columns = df.columns.astype(int)
-    return df
+    data_pivot = df.copy()
+    data_pivot["values"] = 1
+    # 数値じゃない行が除外されるとのことで
+    # data_pivot.loc[data_pivot[column] == 999999, column] = np.nan
+    data_pivot = data_pivot.pivot_table(index="user_id", columns=column, values="values", fill_value=0).astype("bool")
+    data_pivot.index = data_pivot.index.astype(int)
+    data_pivot.columns = data_pivot.columns.astype(int)
+    return data_pivot
 
 
 @stop_watch
@@ -95,13 +97,26 @@ def educations(new_df):
 
 @stop_watch
 def works(new_df):
-    new_df = new_df.drop(columns=["over_1000_employees", "industry_id"])
-    new_df = pivot(new_df, "works")
+    print(new_df["user_id"].unique().__len__() )
+    industry = new_df.copy()
+    employee = new_df[["user_id", "over_1000_employees"]].copy()
 
-    pca = PCA(n_components=100)
-    pca_data = pd.DataFrame(pca.fit_transform(new_df), columns=[f"works_{j}" for j in range(100)])
+    industry = pivot(industry, "industry_id")
+
+    pca = PCA(n_components=20)
+    industry = pd.DataFrame(pca.fit_transform(industry), columns=[f"industry_{j}" for j in range(20)])
+    # industry = pd.DataFrame(industry.index)
+
+    new_df = new_df.drop(columns=["over_1000_employees", "industry_id"])
+    new_df = pivot(new_df, "company_id")
+
+    pca = PCA(n_components=50)
+    pca_data = pd.DataFrame(pca.fit_transform(new_df), columns=[f"works_{j}" for j in range(50)])
     new_df = pd.DataFrame(new_df.index)
     new_df = pd.concat([new_df, pca_data], axis=1)
+    new_df = pd.concat([new_df, industry], axis=1)
+
+    new_df["over_1000_employees"] = employee.groupby("user_id")["over_1000_employees"].sum()
 
     # 75.9MB
     print("hello")
@@ -113,8 +128,8 @@ def skills(new_df):
     new_df["values"] = 1
     new_df = pivot(new_df, "skills")
 
-    pca = PCA(n_components=100)
-    pca_data = pd.DataFrame(pca.fit_transform(new_df), columns=[f"skills_{j}" for j in range(100)])
+    pca = PCA(n_components=50)
+    pca_data = pd.DataFrame(pca.fit_transform(new_df), columns=[f"skills_{j}" for j in range(50)])
     new_df = pd.DataFrame(new_df.index)
     new_df = pd.concat([new_df, pca_data], axis=1)
 
@@ -161,11 +176,11 @@ data_dict = {
     "user_sessions": sessions,
     "user_self_intro_vectors_300dims": intro
 }
-debug = 6
+debug = 1
 for i, (x, func) in enumerate(data_dict.items()):
     print(x)
-    # if i != debug:
-    #     continue
+    if i != debug:
+        continue
     output = func(pd.read_csv(f"../data/{x}.csv"))
     data = pd.merge(data, output, on="user_id", how="left")
     print("\n---------------------------------------------")
