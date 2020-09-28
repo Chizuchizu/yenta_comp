@@ -24,7 +24,7 @@ def stop_watch(func_):
         elapsed_time = time.time() - start
 
         # 処理時間を出力
-        print("{} ms in {}".format(elapsed_time * 1000, func_.__name__))
+        print("{} s in {}".format(round(elapsed_time, 7), func_.__name__))
         return result
 
     return wrapper
@@ -84,12 +84,14 @@ def pivot(df, column):
 @stop_watch
 def educations(new_df):
     new_df = new_df.drop(columns="degree_id")
-    new_df = pivot(new_df, "educations")
+    new_df = pivot(new_df, "school_id")
+    school_num = new_df.sum(axis=1)
 
     pca = PCA(n_components=50)
     pca_data = pd.DataFrame(pca.fit_transform(new_df), columns=[f"educations_{j}" for j in range(50)])
     new_df = pd.DataFrame(new_df.index)
     new_df = pd.concat([new_df, pca_data], axis=1)
+    new_df["school_num"] = school_num.values
 
     # 49.2MB
     return new_df
@@ -97,7 +99,6 @@ def educations(new_df):
 
 @stop_watch
 def works(new_df):
-    print(new_df["user_id"].unique().__len__() )
     industry = new_df.copy()
     employee = new_df[["user_id", "over_1000_employees"]].copy()
 
@@ -110,6 +111,8 @@ def works(new_df):
     new_df = new_df.drop(columns=["over_1000_employees", "industry_id"])
     new_df = pivot(new_df, "company_id")
 
+    work_num = new_df.sum(axis=1)
+
     pca = PCA(n_components=50)
     pca_data = pd.DataFrame(pca.fit_transform(new_df), columns=[f"works_{j}" for j in range(50)])
     new_df = pd.DataFrame(new_df.index)
@@ -117,6 +120,7 @@ def works(new_df):
     new_df = pd.concat([new_df, industry], axis=1)
 
     new_df["over_1000_employees"] = employee.groupby("user_id")["over_1000_employees"].sum()
+    new_df["work_num"] = work_num.values
 
     # 75.9MB
     print("hello")
@@ -126,7 +130,7 @@ def works(new_df):
 @stop_watch
 def skills(new_df):
     new_df["values"] = 1
-    new_df = pivot(new_df, "skills")
+    new_df = pivot(new_df, "skill_id")
 
     pca = PCA(n_components=50)
     pca_data = pd.DataFrame(pca.fit_transform(new_df), columns=[f"skills_{j}" for j in range(50)])
@@ -179,12 +183,12 @@ data_dict = {
 debug = 1
 for i, (x, func) in enumerate(data_dict.items()):
     print(x)
-    if i != debug:
-        continue
+    # if i != debug:
+    #     continue
     output = func(pd.read_csv(f"../data/{x}.csv"))
     data = pd.merge(data, output, on="user_id", how="left")
     print("\n---------------------------------------------")
 
 print(data.info())
 # data = reduce_mem_usage(data)
-data.to_pickle("../data/user_agg_v3.pkl")
+data.to_pickle("../data/user_agg_v4.pkl")

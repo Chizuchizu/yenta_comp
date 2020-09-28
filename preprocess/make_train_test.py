@@ -1,13 +1,13 @@
 import pandas as pd
 
-VERSION = 2
+VERSION = 4
 
 df = pd.read_csv("../data/train.csv")
 
 # target = train["score"]
 
 for mode in ["train", "test"]:
-    data = pd.read_pickle("../data/user_agg_v3.pkl")
+    data = pd.read_pickle(f"../data/user_agg_v{VERSION}.pkl")
     data_1 = pd.read_pickle("../data/data_1_v1.pkl")
     data.index = data["user_id"]
 
