@@ -1,5 +1,5 @@
 import lightgbm as lgb
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedKFold
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -17,12 +17,12 @@ params = {
     'objective': 'multiclass',
     'metric': 'multi_logloss',
     'num_class': NUM_CLASSES,
-    'learning_rate': 0.17,
-    'max_depth': 6,
-    'num_leaves': 24,
+    'learning_rate': 0.15,
+    'max_depth': 7,
+    'num_leaves': 64,
     'max_bin': 31,
-    'colsample_bytree': 0.9,
-    'subsample': 0.9,
+    'colsample_bytree': 0.7,
+    'subsample': 0.7,
     'nthread': -1,
     'bagging_freq': 1,
     'verbose': -1,
@@ -33,7 +33,7 @@ train = pd.read_pickle(f"../data/train_v{VERSION}.pkl")
 test = pd.read_pickle(f"../data/test_v{VERSION}.pkl")
 target = train["score"]
 train = train.drop(columns="score")
-kfold = KFold(n_splits=N_FOLDS, shuffle=True, random_state=SEED)
+kfold = StratifiedKFold(n_splits=N_FOLDS)
 pred = np.zeros((test.shape[0], NUM_CLASSES))
 score = 0
 for fold, (train_idx, valid_idx) in enumerate(kfold.split(train, target)):
